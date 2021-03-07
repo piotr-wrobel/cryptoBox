@@ -119,7 +119,7 @@
     function encryptOpen ()
     {
         #sudo cryptsetup luksOpen "${full_vol_name}" "$vol_name" --key-file "${CONTAINER_PATH}/${key_file}" && notification "Volume unlocked."
-        is_unlocked
+        is_unlocked;
         if [[ $? -eq 1 ]]; then
           warning "Container ${vol_name} is already open !"
         else
@@ -129,7 +129,7 @@
 
     function encryptClose ()
     {
-      is_unlocked
+      is_unlocked;
       if [[ $? -eq 0 ]]; then
         warning "Container ${vol_name} is not open !"
       else
@@ -147,7 +147,7 @@
       if [[ ! -d "${MOUNT_PATH}/${vol_name}" ]]; then
         mkdir -p "${MOUNT_PATH}/${vol_name}"
       fi
-      is_mounted
+      is_mounted;
       if [[ $? -eq 1 ]]; then
         warning "Container ${vol_name} is already mounted !"
       else
@@ -157,7 +157,7 @@
 
     function umountDir ()
     {
-      is_mounted
+      is_mounted;
       if [[ $? -eq 0 ]]; then
         warning "Container ${vol_name} is not mounted !"
       else
