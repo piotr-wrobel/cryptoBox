@@ -1,12 +1,9 @@
 #!/bin/bash
 source "$(dirname $0)/luks.sh"
 
-nameVol;
-#nameKey;
-#nameMount;
+nameVol "create";
 nameSize;
 ddZero;
-#ddRandom;
 encryptCon;
 encryptOpen;
 mkfsFormat;
