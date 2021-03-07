@@ -1,6 +1,8 @@
 #!/bin/bash
 
     G="\033[1;32m";
+    Y="\033[1;33m";
+    R="\033[0;31m";
     N="\033[0;39m";
     CONTAINER_PATH="${HOME}/crypto/containers"
     MOUNT_PATH="${HOME}/mnt"
@@ -9,6 +11,36 @@
     {
         echo -e "$G" "\n[+] $1" "$N"
     };
+
+    function warning ()
+    {
+        echo -e "$Y" "\n[-] $1" "$N"
+    };
+
+    function error ()
+    {
+        echo -e "$R" "\n[!] $1" "$N"
+    };
+
+    function is_mounted ()
+    {
+        COUNT=`mount | grep "${MOUNT_PATH}/${vol_name}" | wc -l`;
+        if [[ ${COUNT} -lt 1 ]]; then
+          return 0
+        else
+          return 1
+        fi
+    }
+
+    function is_unlocked ()
+    {
+      COUNT=`sudo dmsetup ls | grep "${vol_name}.(" | wc -l`;
+      if [[ ${COUNT} -lt 1 ]]; then
+        return 0
+      else
+        return 1
+      fi
+    }
 
     function checkDirectories ()
     {
@@ -33,25 +65,20 @@
         case $1 in
           open)
             if [[ ! -f "${CONTAINER_PATH}/${full_vol_name}" ]]; then
-              echo "Sorry, but container ${vol_name} doesn't exist...."
+              warning "Sorry, but container ${vol_name} doesn't exist...."
               exit 0;
             fi
           ;;
           create)
           if [[ -f "${CONTAINER_PATH}/${full_vol_name}" ]]; then
-            echo "Sorry, but container ${vol_name} already exist !!!"
+            warning "Sorry, but container ${vol_name} already exist !!!"
             exit 0;
           fi
           ;;
           close)
-            # COUNT=`mount | grep "${MOUNT_PATH}/${vol_name}" | wc -l`;
-            # if [[ ${COUNT} -lt 1 ]]; then
-            #   echo "Sorry, but container ${vol_name} is NOT mounted !!"
-            #   exit 0
-            # fi
           ;;
           *)
-            echo "ERROR: Undefinied option in nameVol() calling !"
+            error "ERROR: Undefinied option in nameVol() calling !"
             exit 0;
           ;;
         esac
@@ -92,13 +119,22 @@
     function encryptOpen ()
     {
         #sudo cryptsetup luksOpen "${full_vol_name}" "$vol_name" --key-file "${CONTAINER_PATH}/${key_file}" && notification "Volume unlocked."
-        sudo cryptsetup luksOpen "${CONTAINER_PATH}/${full_vol_name}" "${vol_name}" && notification "Volume unlocked."
-
+        is_unlocked
+        if [[ $? -eq 1 ]]; then
+          warning "Container ${vol_name} is already open !"
+        else
+          sudo cryptsetup luksOpen "${CONTAINER_PATH}/${full_vol_name}" "${vol_name}" && notification "Volume unlocked."
+        fi
     };
 
     function encryptClose ()
     {
-      sudo dmsetup remove /dev/mapper/"${vol_name}" && notification "Container closed."
+      is_unlocked
+      if [[ $? -eq 0 ]]; then
+        warning "Container ${vol_name} is not open !"
+      else
+        sudo dmsetup remove /dev/mapper/"${vol_name}" && notification "Container closed."
+      fi
     };
 
     function mkfsFormat ()
@@ -111,14 +147,19 @@
       if [[ ! -d "${MOUNT_PATH}/${vol_name}" ]]; then
         mkdir -p "${MOUNT_PATH}/${vol_name}"
       fi
-      sudo mount /dev/mapper/"${vol_name}" "${MOUNT_PATH}/${vol_name}"/ && notification "Volume mounted."
+      is_mounted
+      if [[ $? -eq 1 ]]; then
+        warning "Container ${vol_name} is already mounted !"
+      else
+        sudo mount /dev/mapper/"${vol_name}" "${MOUNT_PATH}/${vol_name}"/ && notification "Volume mounted."
+      fi
     };
 
     function umountDir ()
     {
-      COUNT=`mount | grep "${MOUNT_PATH}/${vol_name}" | wc -l`;
-      if [[ ${COUNT} -lt 1 ]]; then
-        echo "Warning: container ${vol_name} is not mounted !"
+      is_mounted
+      if [[ $? -eq 0 ]]; then
+        warning "Container ${vol_name} is not mounted !"
       else
         sudo umount "${MOUNT_PATH}/${vol_name}"/ && notification "Volume umounted."
       fi
@@ -126,5 +167,5 @@
 
     function volPerm ()
     {
-        sudo chown -R "$USER":"$USER" "$HOME"/"$vol_name" && notification "Volume permissions set. Don't lose the Key file!"
+        sudo chown -R "$USER":"$USER" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
     };
