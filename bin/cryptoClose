@@ -1,6 +1,6 @@
 #!/bin/bash
 source "$(dirname $0)/crypto_lib.sh"
 
-nameVol "close";
+nameVol "close" $1;
 umountDir;
 encryptClose;

@@ -1,9 +1,12 @@
 #!/bin/bash
 
+    VERSION="0.2.0"
+
     G="\033[1;32m";
     Y="\033[1;33m";
     R="\033[0;31m";
     N="\033[0;39m";
+
     CONTAINER_PATH="${HOME}/crypto/containers"
     MOUNT_PATH="${HOME}/mnt"
 
@@ -20,6 +23,24 @@
     function error ()
     {
         echo -e "$R" "\n[!] $1" "$N"
+    };
+
+    function message ()
+    {
+        echo -e "$G" "\n[*] $1" "$N"
+    };
+
+    function version ()
+    {
+      message  "CryptoBox version ${VERSION}"
+    };
+
+    function help ()
+    {
+      version
+      echo
+      echo "-o/--open   Open an existing crypto box"
+      echo "-c/--close  Close the open crypto box"
     };
 
     function is_mounted ()
@@ -55,7 +76,13 @@
     function nameVol ()
     {
         checkDirectories
-        read -p "Name of encrypted container (e.g., "container", "valut"): " vol_name;
+
+        if [[ -n $2 ]]; then
+          vol_name="$2"
+        else
+          read -p "Name of encrypted container (e.g., "container", "valut"): " vol_name;
+        fi
+
         if [[ ! -n "${vol_name}" ]]; then
             full_vol_name='EncryptedContainer.cnt';
             vol_name='EncryptedContainer'

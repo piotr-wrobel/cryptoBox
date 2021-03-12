@@ -1,0 +1,74 @@
+#!/bin/bash
+source "$(dirname $0)/crypto_lib.sh"
+
+error "This module is not finished yet, use cryptoOpen/cryptoClose/cryptoCreate"
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -d|--debug)
+    DEBUG="debug"
+    shift # past argument
+    ;;
+    -o|--open)
+    MODE="open"
+    shift # past argument
+    ;;
+    -c|--close)
+    MODE="close"
+    shift # past argument
+    ;;
+    -n|--new)
+    MODE="new"
+    shift # past argument
+    ;;
+    -v|--version)
+    MODE="version"
+    shift # past argument
+    ;;
+    -h|--help)
+    MODE="help"
+    shift # past argument
+    ;;
+    -b|--box)
+    BOX="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [[ -n ${DEBUG} ]]; then
+  echo "MODE  = ${MODE}"
+  echo "BOX   = ${BOX}"
+  if [[ -n $1 ]]; then
+      echo "Box name ${1}"
+  fi
+fi
+
+case ${MODE} in
+  open)
+  ;;
+  close)
+  ;;
+  new)
+  ;;
+  version)
+    version
+  ;;
+  help)
+    help
+  ;;
+  *)
+    warning "You must select mode with -o/-c/-n/-v/-h option..."
+    exit 0;
+  ;;
+esac

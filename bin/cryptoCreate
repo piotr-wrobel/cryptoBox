@@ -1,7 +1,7 @@
 #!/bin/bash
 source "$(dirname $0)/crypto_lib.sh"
 
-nameVol "create";
+nameVol "create" $1;
 nameSize;
 ddZero;
 encryptCon;
