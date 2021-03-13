@@ -7,7 +7,7 @@
     R="\033[0;31m";
     N="\033[0;39m";
 
-    CONTAINER_PATH="${HOME}/.cryptoBox/containers"
+    BOXES_PATH="${HOME}/.cryptoBox/boxes"
     MOUNT_PATH="${HOME}/mnt"
 
     function notification ()
@@ -32,15 +32,18 @@
 
     function version ()
     {
-      message  "CryptoBox version ${VERSION}"
+      message  "cryptoBox version ${VERSION}"
     };
 
     function help ()
     {
       version
+      echo;echo
+      echo "Options:"
+      echo "-o/--open <boxname>   Open an existing crypto box"
+      echo "-c/--close <boxname>  Close the open crypto box"
+      echo "-n/--new <boxname>    Create new crypto box"
       echo
-      echo "-o/--open   Open an existing crypto box"
-      echo "-c/--close  Close the open crypto box"
     };
 
     function is_mounted ()
@@ -65,8 +68,8 @@
 
     function checkDirectories ()
     {
-      if [[ ! -d ${CONTAINER_PATH} ]]; then
-        mkdir -p ${CONTAINER_PATH}
+      if [[ ! -d ${BOXES_PATH} ]]; then
+        mkdir -p ${BOXES_PATH}
       fi
       if [[ ! -d ${MOUNT_PATH} ]]; then
         mkdir -p ${MOUNT_PATH}
@@ -80,25 +83,25 @@
         if [[ -n $2 ]]; then
           vol_name="$2"
         else
-          read -p "Name of encrypted container (e.g., "container", "valut"): " vol_name;
+          read -p "Name of encrypted box (e.g., "mybox", "valut"): " vol_name;
         fi
 
         if [[ ! -n "${vol_name}" ]]; then
-            full_vol_name='EncryptedContainer.cnt';
-            vol_name='EncryptedContainer'
+            full_vol_name='encryptedBox.box';
+            vol_name='encryptedBox'
         else
-          full_vol_name="${vol_name}.cnt"
+          full_vol_name="${vol_name}.box"
         fi
         case $1 in
           open)
-            if [[ ! -f "${CONTAINER_PATH}/${full_vol_name}" ]]; then
-              warning "Sorry, but container ${vol_name} doesn't exist...."
+            if [[ ! -f "${BOXES_PATH}/${full_vol_name}" ]]; then
+              warning "Sorry, but box \"${vol_name}\" doesn't exist...."
               exit 0;
             fi
           ;;
           new)
-          if [[ -f "${CONTAINER_PATH}/${full_vol_name}" ]]; then
-            warning "Sorry, but container ${vol_name} already exist !!!"
+          if [[ -f "${BOXES_PATH}/${full_vol_name}" ]]; then
+            warning "Sorry, but box \"${vol_name}\" already exist !!!"
             exit 0;
           fi
           ;;
@@ -129,28 +132,28 @@
 
     function ddZero ()
     {
-        dd if=/dev/zero of="${CONTAINER_PATH}/${full_vol_name}" bs=1 count=0 seek="${vol_size}" && notification "Empty volume created."
+        dd if=/dev/zero of="${BOXES_PATH}/${full_vol_name}" bs=1 count=0 seek="${vol_size}" && notification "Empty volume created."
     };
 
     function ddRandom ()
     {
-        dd if=/dev/urandom of="${CONTAINER_PATH}/${key_file}" bs=4096 count=1 && notification "Key file successfully created."
+        dd if=/dev/urandom of="${BOXES_PATH}/${key_file}" bs=4096 count=1 && notification "Key file successfully created."
     };
 
     function encryptCon ()
     {
-        #sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${CONTAINER_PATH}/${full_vol_name}" "${CONTAINER_PATH}/${key_file}" && notification "Encrypted container created."
-        sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${CONTAINER_PATH}/${full_vol_name}" && notification "Encrypted container created."
+        #sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${BOXES_PATH}/${full_vol_name}" "${BOXES_PATH}/${key_file}" && notification "Encrypted box created."
+        sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${BOXES_PATH}/${full_vol_name}" && notification "Encrypted box created."
     };
 
     function encryptOpen ()
     {
-        #sudo cryptsetup luksOpen "${full_vol_name}" "$vol_name" --key-file "${CONTAINER_PATH}/${key_file}" && notification "Volume unlocked."
+        #sudo cryptsetup luksOpen "${full_vol_name}" "$vol_name" --key-file "${BOXES_PATH}/${key_file}" && notification "Volume unlocked."
         is_unlocked;
         if [[ $? -eq 1 ]]; then
-          warning "Container ${vol_name} is already open !"
+          warning "Box \"${vol_name}\" is already open !"
         else
-          sudo cryptsetup luksOpen "${CONTAINER_PATH}/${full_vol_name}" "${vol_name}" && notification "Volume unlocked."
+          sudo cryptsetup luksOpen "${BOXES_PATH}/${full_vol_name}" "${vol_name}" && notification "Volume unlocked."
         fi
     };
 
@@ -158,9 +161,9 @@
     {
       is_unlocked;
       if [[ $? -eq 0 ]]; then
-        warning "Container ${vol_name} is not open !"
+        warning "Box \"${vol_name}\" is not open !"
       else
-        sudo dmsetup remove /dev/mapper/"${vol_name}" && notification "Container closed."
+        sudo dmsetup remove /dev/mapper/"${vol_name}" && notification "Box closed."
       fi
     };
 
@@ -176,7 +179,7 @@
       fi
       is_mounted;
       if [[ $? -eq 1 ]]; then
-        warning "Container ${vol_name} is already mounted !"
+        warning "Box \"${vol_name}\" is already mounted !"
       else
         sudo mount /dev/mapper/"${vol_name}" "${MOUNT_PATH}/${vol_name}"/ && notification "Volume mounted."
       fi
@@ -186,7 +189,7 @@
     {
       is_mounted;
       if [[ $? -eq 0 ]]; then
-        warning "Container ${vol_name} is not mounted !"
+        warning "Box \"${vol_name}\" is not mounted !"
       else
         sudo umount "${MOUNT_PATH}/${vol_name}"/ && notification "Volume umounted."
       fi
