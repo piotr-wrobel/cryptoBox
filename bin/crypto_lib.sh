@@ -96,7 +96,7 @@
               exit 0;
             fi
           ;;
-          create)
+          new)
           if [[ -f "${CONTAINER_PATH}/${full_vol_name}" ]]; then
             warning "Sorry, but container ${vol_name} already exist !!!"
             exit 0;

@@ -1,7 +1,7 @@
 #!/bin/bash
 source "$(dirname $0)/crypto_lib.sh"
 
-error "This module is not finished yet, use cryptoOpen/cryptoClose/cryptoCreate"
+#error "This module is not finished yet, use cryptoOpen/cryptoClose/cryptoCreate"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -33,11 +33,6 @@ case $key in
     MODE="help"
     shift # past argument
     ;;
-    -b|--box)
-    BOX="$2"
-    shift # past argument
-    shift # past value
-    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -48,7 +43,6 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [[ -n ${DEBUG} ]]; then
   echo "MODE  = ${MODE}"
-  echo "BOX   = ${BOX}"
   if [[ -n $1 ]]; then
       echo "Box name ${1}"
   fi
@@ -56,10 +50,24 @@ fi
 
 case ${MODE} in
   open)
+    nameVol ${MODE} ${1};
+    encryptOpen;
+    mountDir;
   ;;
   close)
+    nameVol ${MODE} ${1};
+    umountDir;
+    encryptClose;
   ;;
   new)
+    nameVol ${MODE} ${1};
+    nameSize;
+    ddZero;
+    encryptCon;
+    encryptOpen;
+    mkfsFormat;
+    mountDir;
+    volPerm;
   ;;
   version)
     version
