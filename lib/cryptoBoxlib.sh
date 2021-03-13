@@ -197,5 +197,6 @@
 
     function volPerm ()
     {
-        sudo chown -R "$USER":"$USER" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
+      UGROUP=`id -ng`
+      sudo chown -R "$USER":"$UGROUP" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
     };
