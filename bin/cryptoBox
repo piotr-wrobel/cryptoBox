@@ -1,7 +1,13 @@
 #!/bin/bash
-source "$(dirname $0)/crypto_lib.sh"
 
-#error "This module is not finished yet, use cryptoOpen/cryptoClose/cryptoCreate"
+if [[ -f "$(dirname $0)/../lib/cryptoBoxlib.sh" ]]; then
+  source "$(dirname $0)/../lib/cryptoBoxlib.sh"
+elif [[ -f "${HOME}/.cryptoBox/lib/cryptoBoxlib.sh" ]]; then
+  source "${HOME}/.cryptoBox/lib/cryptoBoxlib.sh"
+else
+  echo "!!! FATAL ERROR: cryptoBoxlib not found !!!"
+  exit 1
+fi
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]

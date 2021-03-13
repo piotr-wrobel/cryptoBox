@@ -1,13 +1,13 @@
 #!/bin/bash
 
-    VERSION="0.2.0"
+    VERSION="0.3.0"
 
     G="\033[1;32m";
     Y="\033[1;33m";
     R="\033[0;31m";
     N="\033[0;39m";
 
-    CONTAINER_PATH="${HOME}/crypto/containers"
+    CONTAINER_PATH="${HOME}/.cryptoBox/containers"
     MOUNT_PATH="${HOME}/mnt"
 
     function notification ()
