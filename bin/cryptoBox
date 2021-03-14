@@ -31,6 +31,14 @@ case $key in
     MODE="new"
     shift # past argument
     ;;
+    -s|--status)
+    MODE="status"
+    shift #past argument
+    ;;
+    -r|--remove)
+    MODE="remove"
+    shift #past arguments
+    ;;
     -v|--version)
     MODE="version"
     shift # past argument
@@ -75,6 +83,13 @@ case ${MODE} in
     mountDir;
     volPerm;
   ;;
+  status)
+    boxesStatus ${1}
+  ;;
+  remove)
+    nameVol ${MODE} ${1};
+    removeBox;
+  ;;
   version)
     version
   ;;
@@ -82,7 +97,7 @@ case ${MODE} in
     help
   ;;
   *)
-    warning "You must select mode with -o/-c/-n/-v/-h option..."
+    warning "You must select mode, us -h option for help"
     exit 0;
   ;;
 esac

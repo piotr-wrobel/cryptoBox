@@ -1,6 +1,6 @@
 #!/bin/bash
 
-    VERSION="0.3.0"
+    VERSION="0.4.0"
 
     G="\033[1;32m";
     Y="\033[1;33m";
@@ -43,6 +43,10 @@
       echo "-o/--open <boxname>   Open an existing crypto box"
       echo "-c/--close <boxname>  Close the open crypto box"
       echo "-n/--new <boxname>    Create new crypto box"
+      echo "-s/--status <boxname> Status of crypto box/boxes"
+      echo "-r/--remove <boxname> Permanent removal of crypto box"
+      echo "-h/--help             Show this help message"
+      echo "-v/--version          cryptoBox version"
       echo
     };
 
@@ -94,6 +98,12 @@
         fi
         case $1 in
           open)
+            if [[ ! -f "${BOXES_PATH}/${full_vol_name}" ]]; then
+              warning "Sorry, but box \"${vol_name}\" doesn't exist...."
+              exit 0;
+            fi
+          ;;
+          remove)
             if [[ ! -f "${BOXES_PATH}/${full_vol_name}" ]]; then
               warning "Sorry, but box \"${vol_name}\" doesn't exist...."
               exit 0;
@@ -199,4 +209,14 @@
     {
       UGROUP=`id -ng`
       sudo chown -R "$USER":"$UGROUP" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
+    };
+
+    function boxesStatus ()
+    {
+      echo "Not implemented yet";
+    };
+
+    function removeBox ()
+    {
+      echo "Not implemented yet";
     };
