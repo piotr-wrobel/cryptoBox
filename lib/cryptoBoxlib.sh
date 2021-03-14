@@ -213,7 +213,30 @@
 
     function boxesStatus ()
     {
-      echo "Not implemented yet";
+      message "Status of finded boxes:"
+      for BOX in `ls ${BOXES_PATH}/*.box`
+      do
+        BOX=$(basename -- "${BOX}")
+        vol_name="${BOX%.*}"
+
+        is_mounted
+        if [[ $? -eq 1 ]]; then
+          STATUS="mounted"
+        else
+          STATUS="unmounted"
+        fi
+
+        is_unlocked
+        if [[ $? -eq 1 ]]; then
+          STATUS="${STATUS} unlocked"
+        else
+          STATUS="${STATUS} locked"
+        fi
+
+        #echo -e "-> ${vol_name}\t\t${STATUS}"
+        printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+      done
+      echo
     };
 
     function removeBox ()
