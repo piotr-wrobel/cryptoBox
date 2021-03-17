@@ -241,5 +241,22 @@
 
     function removeBox ()
     {
-      echo "Not implemented yet";
+      is_mounted;
+      if [[ $? -eq 1 ]]; then
+        warning "Box \"${vol_name}\" is already mounted !";
+        exit;
+      fi
+
+      is_unlocked;
+      if [[ $? -eq 1 ]]; then
+        warning "Box \"${vol_name}\" is already open !";
+        exit;
+      fi
+
+      read -p "Are you sure? Type \"yes\" in uppercase: " confirmation;
+      if [[ ${confirmation} != "YES" ]]; then
+        error "Box removal aborted !";
+      else
+        rm "${BOXES_PATH}/${full_vol_name}" && notification "Box \"${vol_name}\" has been removed !"
+      fi
     };
