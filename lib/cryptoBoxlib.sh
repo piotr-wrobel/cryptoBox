@@ -62,7 +62,7 @@
 
     function is_unlocked ()
     {
-      COUNT=`sudo dmsetup ls | grep "${vol_name}.(" | wc -l`;
+      COUNT=`sudo dmsetup ls | grep "^${vol_name}.(" | wc -l`;
       if [[ ${COUNT} -lt 1 ]]; then
         return 0
       else
@@ -219,18 +219,18 @@
         BOX=$(basename -- "${BOX}")
         vol_name="${BOX%.*}"
 
-        is_mounted
-        if [[ $? -eq 1 ]]; then
-          STATUS="mounted"
-        else
-          STATUS="unmounted"
-        fi
-
         is_unlocked
         if [[ $? -eq 1 ]]; then
-          STATUS="${STATUS} unlocked"
+          STATUS="unlocked"
         else
-          STATUS="${STATUS} locked"
+          STATUS="locked"
+        fi
+
+        is_mounted
+        if [[ $? -eq 1 ]]; then
+          STATUS="${STATUS} & mounted"
+        else
+          STATUS="${STATUS} & unmounted"
         fi
 
         #echo -e "-> ${vol_name}\t\t${STATUS}"
