@@ -211,6 +211,23 @@
       sudo chown -R "$USER":"$UGROUP" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
     };
 
+    function _boxesStatus ()
+    {
+      is_mounted
+      if [[ $? -eq 1 ]]; then
+        STATUS="mounted"
+      else
+        STATUS="unmounted"
+      fi
+      is_unlocked
+      if [[ $? -eq 1 ]]; then
+        STATUS="${STATUS} unlocked"
+      else
+        STATUS="${STATUS} locked"
+      fi
+      printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+    }
+
     function boxesStatus ()
     {
       if [[ -n "${1}" ]]; then
@@ -219,6 +236,8 @@
           exit 0;
         else
           message "Status of selected box:"
+          vol_name="${1}"
+          _boxesStatus
         fi
       else
         message "Status of finded boxes:"
@@ -226,20 +245,7 @@
         do
           BOX=$(basename -- "${BOX}")
           vol_name="${BOX%.*}"
-
-          is_mounted
-          if [[ $? -eq 1 ]]; then
-            STATUS="mounted"
-          else
-            STATUS="unmounted"
-          fi
-          is_unlocked
-          if [[ $? -eq 1 ]]; then
-            STATUS="${STATUS} unlocked"
-          else
-            STATUS="${STATUS} locked"
-          fi
-          printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+          _boxesStatus
         done
       fi
       echo
