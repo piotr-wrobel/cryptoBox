@@ -270,5 +270,6 @@
         error "Box removal aborted !";
       else
         rm "${BOXES_PATH}/${full_vol_name}" && notification "Box \"${vol_name}\" has been removed !"
+        rm -d "${MOUNT_PATH}/${vol_name}" && notification "Mount point \"${MOUNT_PATH}/${vol_name}\" has been removed !"
       fi
     };
