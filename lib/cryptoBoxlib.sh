@@ -52,7 +52,7 @@
 
     function is_mounted ()
     {
-        COUNT=`mount | grep "${MOUNT_PATH}/${vol_name}" | wc -l`;
+        COUNT=`mount | grep "${MOUNT_PATH}/${vol_name} " | wc -l`;
         if [[ ${COUNT} -lt 1 ]]; then
           return 0
         else
@@ -213,29 +213,35 @@
 
     function boxesStatus ()
     {
-      message "Status of finded boxes:"
-      for BOX in `ls ${BOXES_PATH}/*.box`
-      do
-        BOX=$(basename -- "${BOX}")
-        vol_name="${BOX%.*}"
-
-        is_unlocked
-        if [[ $? -eq 1 ]]; then
-          STATUS="unlocked"
+      if [[ -n "${1}" ]]; then
+        if [[ ! -f "${BOXES_PATH}/${1}.box" ]]; then
+          warning "Sorry, but box \"${1}\" doesn't exist...."
+          exit 0;
         else
-          STATUS="locked"
+          message "Status of selected box:"
         fi
+      else
+        message "Status of finded boxes:"
+        for BOX in `ls ${BOXES_PATH}/*.box`
+        do
+          BOX=$(basename -- "${BOX}")
+          vol_name="${BOX%.*}"
 
-        is_mounted
-        if [[ $? -eq 1 ]]; then
-          STATUS="${STATUS} & mounted"
-        else
-          STATUS="${STATUS} & unmounted"
-        fi
-
-        #echo -e "-> ${vol_name}\t\t${STATUS}"
-        printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
-      done
+          is_mounted
+          if [[ $? -eq 1 ]]; then
+            STATUS="mounted"
+          else
+            STATUS="unmounted"
+          fi
+          is_unlocked
+          if [[ $? -eq 1 ]]; then
+            STATUS="${STATUS} unlocked"
+          else
+            STATUS="${STATUS} locked"
+          fi
+          printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+        done
+      fi
       echo
     };
 
