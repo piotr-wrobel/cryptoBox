@@ -1,6 +1,6 @@
 #!/bin/bash
 
-    VERSION="0.3.0"
+    VERSION="0.4.0"
 
     G="\033[1;32m";
     Y="\033[1;33m";
@@ -43,12 +43,16 @@
       echo "-o/--open <boxname>   Open an existing crypto box"
       echo "-c/--close <boxname>  Close the open crypto box"
       echo "-n/--new <boxname>    Create new crypto box"
+      echo "-s/--status <boxname> Status of crypto box/boxes"
+      echo "-r/--remove <boxname> Permanent removal of crypto box"
+      echo "-h/--help             Show this help message"
+      echo "-v/--version          cryptoBox version"
       echo
     };
 
     function is_mounted ()
     {
-        COUNT=`mount | grep "${MOUNT_PATH}/${vol_name}" | wc -l`;
+        COUNT=`mount | grep "${MOUNT_PATH}/${vol_name} " | wc -l`;
         if [[ ${COUNT} -lt 1 ]]; then
           return 0
         else
@@ -58,7 +62,7 @@
 
     function is_unlocked ()
     {
-      COUNT=`sudo dmsetup ls | grep "${vol_name}.(" | wc -l`;
+      COUNT=`sudo dmsetup ls | grep "^${vol_name}.(" | wc -l`;
       if [[ ${COUNT} -lt 1 ]]; then
         return 0
       else
@@ -94,6 +98,12 @@
         fi
         case $1 in
           open)
+            if [[ ! -f "${BOXES_PATH}/${full_vol_name}" ]]; then
+              warning "Sorry, but box \"${vol_name}\" doesn't exist...."
+              exit 0;
+            fi
+          ;;
+          remove)
             if [[ ! -f "${BOXES_PATH}/${full_vol_name}" ]]; then
               warning "Sorry, but box \"${vol_name}\" doesn't exist...."
               exit 0;
@@ -199,4 +209,66 @@
     {
       UGROUP=`id -ng`
       sudo chown -R "$USER":"$UGROUP" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
+    };
+
+    function _boxesStatus ()
+    {
+      is_mounted
+      if [[ $? -eq 1 ]]; then
+        STATUS="mounted"
+      else
+        STATUS="unmounted"
+      fi
+      is_unlocked
+      if [[ $? -eq 1 ]]; then
+        STATUS="${STATUS} unlocked"
+      else
+        STATUS="${STATUS} locked"
+      fi
+      printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+    }
+
+    function boxesStatus ()
+    {
+      if [[ -n "${1}" ]]; then
+        if [[ ! -f "${BOXES_PATH}/${1}.box" ]]; then
+          warning "Sorry, but box \"${1}\" doesn't exist...."
+          exit 0;
+        else
+          message "Status of selected box:"
+          vol_name="${1}"
+          _boxesStatus
+        fi
+      else
+        message "Status of finded boxes:"
+        for BOX in `ls ${BOXES_PATH}/*.box`
+        do
+          BOX=$(basename -- "${BOX}")
+          vol_name="${BOX%.*}"
+          _boxesStatus
+        done
+      fi
+      echo
+    };
+
+    function removeBox ()
+    {
+      is_mounted;
+      if [[ $? -eq 1 ]]; then
+        warning "Box \"${vol_name}\" is already mounted !";
+        exit;
+      fi
+
+      is_unlocked;
+      if [[ $? -eq 1 ]]; then
+        warning "Box \"${vol_name}\" is already open !";
+        exit;
+      fi
+
+      read -p "Are you sure? Type \"yes\" in uppercase: " confirmation;
+      if [[ ${confirmation} != "YES" ]]; then
+        error "Box removal aborted !";
+      else
+        rm "${BOXES_PATH}/${full_vol_name}" && notification "Box \"${vol_name}\" has been removed !"
+      fi
     };
