@@ -213,19 +213,22 @@
 
     function _boxesStatus ()
     {
-      is_mounted
-      if [[ $? -eq 1 ]]; then
-        STATUS="mounted"
-      else
-        STATUS="unmounted"
+      if [[ -f "${BOXES_PATH}/${vol_name}.box" ]]; then
+        size="$(ls -lh "${BOXES_PATH}/${vol_name}.box" | cut -d' ' -f5)"
       fi
       is_unlocked
       if [[ $? -eq 1 ]]; then
-        STATUS="${STATUS} unlocked"
+        STATUS="unlocked,"
       else
-        STATUS="${STATUS} locked"
+        STATUS="locked,"
       fi
-      printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+      is_mounted
+      if [[ $? -eq 1 ]]; then
+        STATUS="${STATUS}mounted (in ${MOUNT_PATH}/${vol_name})"
+      else
+        STATUS="${STATUS}unmounted"
+      fi
+      printf ' -> %-15s %s\n' "$vol_name ($size)" "status:$STATUS"
     }
 
     function boxesStatus ()
