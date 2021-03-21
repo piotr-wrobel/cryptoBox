@@ -240,13 +240,17 @@
           _boxesStatus
         fi
       else
-        message "Status of finded boxes:"
-        for BOX in `ls ${BOXES_PATH}/*.box`
-        do
-          BOX=$(basename -- "${BOX}")
-          vol_name="${BOX%.*}"
-          _boxesStatus
-        done
+        if [[ "$(ls -A ${BOXES_PATH})" ]]; then
+          message "Status of finded boxes:"
+          for BOX in $(ls ${BOXES_PATH}/*.box)
+          do
+            BOX=$(basename -- "${BOX}")
+            vol_name="${BOX%.*}"
+            _boxesStatus
+          done
+        else
+          message "You don't have any boxes yet!"
+        fi
       fi
       echo
     };
