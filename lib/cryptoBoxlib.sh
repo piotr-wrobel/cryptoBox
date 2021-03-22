@@ -142,7 +142,13 @@
 
     function ddZero ()
     {
-        dd if=/dev/zero of="${BOXES_PATH}/${full_vol_name}" bs=1 count=0 seek="${vol_size}" && notification "Empty volume created."
+        dd if=/dev/zero of="${BOXES_PATH}/${full_vol_name}" bs=1 count=0 seek="${vol_size}"
+        if [[ $? -eq 0 ]]; then
+          notification "Empty volume created."
+        else
+          warning "Operation aborted due to an error !"
+          exit;
+        fi
     };
 
     function ddRandom ()
@@ -153,7 +159,13 @@
     function encryptCon ()
     {
         #sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${BOXES_PATH}/${full_vol_name}" "${BOXES_PATH}/${key_file}" && notification "Encrypted box created."
-        sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${BOXES_PATH}/${full_vol_name}" && notification "Encrypted box created."
+        sudo cryptsetup -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat "${BOXES_PATH}/${full_vol_name}"
+        if [[ $? -eq 0 ]]; then
+          notification "Encrypted box created."
+        else
+          warning "Operation aborted due to an error !"
+          exit;
+        fi
     };
 
     function encryptOpen ()
@@ -163,7 +175,13 @@
         if [[ $? -eq 1 ]]; then
           warning "Box \"${vol_name}\" is already open !"
         else
-          sudo cryptsetup luksOpen "${BOXES_PATH}/${full_vol_name}" "${vol_name}" && notification "Volume unlocked."
+          sudo cryptsetup luksOpen "${BOXES_PATH}/${full_vol_name}" "${vol_name}"
+          if [[ $? -eq 0 ]]; then
+            notification "Volume unlocked."
+          else
+            warning "Operation aborted due to an error !"
+            exit;
+          fi
         fi
     };
 
@@ -173,13 +191,25 @@
       if [[ $? -eq 0 ]]; then
         warning "Box \"${vol_name}\" is not open !"
       else
-        sudo dmsetup remove /dev/mapper/"${vol_name}" && notification "Box closed."
+        sudo dmsetup remove /dev/mapper/"${vol_name}"
+        if [[ $? -eq 0 ]]; then
+          notification "Box closed."
+        else
+          warning "Operation aborted due to an error !"
+          exit;
+        fi
       fi
     };
 
     function mkfsFormat ()
     {
-        sudo mkfs.ext4 /dev/mapper/"${vol_name}" && notification "Volume formatted."
+        sudo mkfs.ext4 /dev/mapper/"${vol_name}"
+        if [[ $? -eq 0 ]]; then
+          notification "Volume formatted."
+        else
+          warning "Operation aborted due to an error !"
+          exit;
+        fi
     };
 
     function mountDir ()
@@ -191,7 +221,13 @@
       if [[ $? -eq 1 ]]; then
         warning "Box \"${vol_name}\" is already mounted !"
       else
-        sudo mount /dev/mapper/"${vol_name}" "${MOUNT_PATH}/${vol_name}"/ && notification "Volume mounted."
+        sudo mount /dev/mapper/"${vol_name}" "${MOUNT_PATH}/${vol_name}/"
+        if [[ $? -eq 0 ]]; then
+          notification "Volume mounted."
+        else
+          warning "Operation aborted due to an error !"
+          exit;
+        fi
       fi
     };
 
@@ -199,43 +235,58 @@
     {
       is_mounted;
       if [[ $? -eq 0 ]]; then
-        warning "Box \"${vol_name}\" is not mounted !"
+        warning "Box \"${vol_name}\" is not mounted !";
       else
-        sudo umount "${MOUNT_PATH}/${vol_name}"/ && notification "Volume umounted."
+        sudo umount "${MOUNT_PATH}/${vol_name}/"
+        if [[ $? -eq 0 ]]; then
+          notification "Volume umounted."
+        else
+          warning "Operation aborted due to an error !";
+          exit;
+        fi
       fi
     }
 
     function volPerm ()
     {
       UGROUP=`id -ng`
-      sudo chown -R "$USER":"$UGROUP" "${MOUNT_PATH}/${vol_name}" && notification "Volume permissions set."
+      sudo chown -R "$USER":"$UGROUP" "${MOUNT_PATH}/${vol_name}"
+      if [[ $? -eq 0 ]]; then
+        notification "Volume permissions set."
+      else
+        warning "Operation aborted due to an error !"
+        exit 0;
+      fi
     };
 
     function _boxesStatus ()
     {
-      is_mounted
-      if [[ $? -eq 1 ]]; then
-        STATUS="mounted"
-      else
-        STATUS="unmounted"
+      if [[ -f "${BOXES_PATH}/${vol_name}.box" ]]; then
+        size="$(ls -lh "${BOXES_PATH}/${vol_name}.box" | cut -d' ' -f5)"
       fi
       is_unlocked
       if [[ $? -eq 1 ]]; then
-        STATUS="${STATUS} unlocked"
+        STATUS="unlocked,"
       else
-        STATUS="${STATUS} locked"
+        STATUS="locked,"
       fi
-      printf ' -> %-15s: %s\n' "$vol_name" "$STATUS"
+      is_mounted
+      if [[ $? -eq 1 ]]; then
+        STATUS="${STATUS}mounted (in ${MOUNT_PATH}/${vol_name})"
+      else
+        STATUS="${STATUS}unmounted"
+      fi
+      printf ' -> %-15s %s\n' "$vol_name ($size)" "status:$STATUS"
     }
 
     function boxesStatus ()
     {
       if [[ -n "${1}" ]]; then
         if [[ ! -f "${BOXES_PATH}/${1}.box" ]]; then
-          warning "Sorry, but box \"${1}\" doesn't exist...."
+          warning "Sorry, but box \"${1}\" doesn't exist....";
           exit 0;
         else
-          message "Status of selected box:"
+          message "Status of selected box:";
           vol_name="${1}"
           _boxesStatus
         fi
@@ -249,7 +300,7 @@
             _boxesStatus
           done
         else
-          message "You don't have any boxes yet!"
+          message "You don't have any boxes yet !";
         fi
       fi
       echo
